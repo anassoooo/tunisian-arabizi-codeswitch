@@ -123,7 +123,7 @@ def is_code_switched(labels: list[str]) -> bool:
 
 def save_jsonl(sents: list[dict], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
+    with path.open("w", encoding="utf-8", newline="\n") as f:  # same bytes on every OS
         for s in sents:
             f.write(json.dumps(s, ensure_ascii=False) + "\n")
 
@@ -142,7 +142,7 @@ def prepare_splits(out_dir: Path = PROCESSED, seed: int = SEED) -> dict:
         save_jsonl(data, out_dir / f"{name}.jsonl")
     summary = {"cleaning_log": dict(log), "sentences_after_cleaning": len(sents), "duplicates_removed": len(sents) - len(unique),
                "train": len(train), "dev": len(dev), "test": len(test), "seed": seed}
-    (out_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    (out_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8", newline="\n")
     return summary
 
 

@@ -103,6 +103,7 @@ Trained models are not included in the repository (about 1.1 GB, mostly XLM-R). 
 ## Limitations
 
 - One random split and one training seed per model. The confidence intervals reflect test-set sampling, not training variance.
+- The data split and the lexicon, n-gram and CRF results reproduce exactly. The neural models (BiLSTM-CRF, XLM-R) can differ slightly between runs because GPU training is non-deterministic: one retrain of the BiLSTM-CRF gave 0.964 instead of 0.966 foreign-word F1.
 - The corpus labels French and English together as "foreign", and puts Modern Standard Arabic inside the Tunisian class.
 - TArC has no author IDs, so posts by the same person may appear in both train and test.
 - The results are not directly comparable with the corpus authors' reported classifier accuracy, which was measured on a different split.

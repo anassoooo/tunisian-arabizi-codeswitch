@@ -52,10 +52,10 @@ def results_table(rows: dict[str, dict]) -> pd.DataFrame:
 def save_results(table: pd.DataFrame, preds: dict[str, list[list[str]]], test: list[dict]) -> None:
     TABLES.mkdir(parents=True, exist_ok=True)
     PREDICTIONS.mkdir(parents=True, exist_ok=True)
-    table.to_csv(TABLES / "results_test.csv")
+    table.to_csv(TABLES / "results_test.csv", lineterminator="\n")
     for name, pred in preds.items():
         slug = name.split(" (")[0].lower().replace(" ", "_").replace("-", "_")
-        with (PREDICTIONS / f"test_{slug}.jsonl").open("w", encoding="utf-8") as f:
+        with (PREDICTIONS / f"test_{slug}.jsonl").open("w", encoding="utf-8", newline="\n") as f:
             for s, p in zip(test, pred):
                 f.write(json.dumps({"id": s["id"], "tokens": s["tokens"], "gold": s["labels"], "pred": p},
                                    ensure_ascii=False) + "\n")
