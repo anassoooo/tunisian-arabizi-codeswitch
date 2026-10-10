@@ -6,7 +6,7 @@ Tunisians often write their dialect online in Latin letters and digits, a style 
 
 In Arabic-script corpora the task is almost trivial, because Tunisian words are in Arabic letters and foreign words in Latin letters. In Arabizi both languages share one alphabet. The cues are subtle:
 
-- digits used as letters (`3` = ع, `7` = ح, `9` = ق, `5` = خ);
+- digits used as letters (`3` = ع‎, `7` = ح‎, `9` = ق‎, `5` = خ‎);
 - French spelling and accents;
 - **context**, for words that exist in both languages (`la`, `ma`, `en`, `ou`).
 
