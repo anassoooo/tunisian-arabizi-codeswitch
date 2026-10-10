@@ -1,0 +1,15 @@
+# environments and caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# trained models (~1.1 GB): recreate with scripts/train_evaluate.py
+models/*
+!models/README.md
+
+# local run logs and personal notes
+results/train_log.txt
+docs/PRESENTATION_GUIDE.md
+CLAUDE.md

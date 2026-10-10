@@ -1,0 +1,14 @@
+{
+  "cleaning_log": {
+    "no letter (punct/number)": 4148,
+    "user placeholder": 2986,
+    "emotag": 617,
+    "nan relabelled TUN": 1
+  },
+  "sentences_after_cleaning": 3960,
+  "duplicates_removed": 502,
+  "train": 2766,
+  "dev": 345,
+  "test": 347,
+  "seed": 42
+}

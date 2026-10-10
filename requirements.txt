@@ -1,0 +1,10 @@
+numpy>=1.26
+pandas>=2.0
+matplotlib>=3.8
+scikit-learn>=1.4
+sklearn-crfsuite>=0.5
+torch>=2.2
+transformers>=4.44,<5
+sentencepiece>=0.2
+jupyterlab>=4.0
+ipykernel>=6.0

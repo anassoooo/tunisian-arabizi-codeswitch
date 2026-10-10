@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.png binary
+# keep the redistributed corpus byte-identical to the upstream release
+data/raw/tarc.tsv -text
