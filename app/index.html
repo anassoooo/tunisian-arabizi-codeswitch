@@ -4,114 +4,137 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Arabizi Code-Switch Detector</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap">
 <style>
+  /* Sidi Bou Said palette: door cobalt, whitewash, night blue, bougainvillea. Fonts fall back offline. */
   :root {
-    --bg: #f7f6f2; --surface: #ffffff; --ink: #1d1d1b; --ink-2: #5c5b55; --ink-3: #8f8d84;
-    --line: #e4e2da; --tun: #2a78d6; --tun-soft: #e3eefb; --for: #eb6834; --for-soft: #fde8de;
-    --disagree: #eda100; --radius: 10px;
+    --page: #f7f8f5; --paper: #ffffff; --ink: #0b1f3a; --ink-2: #3f5878; --ink-3: #6b7f9c; --line: #d9e1ec;
+    --cobalt: #1446a0; --cobalt-deep: #0e3684; --sky: #dce8f7; --magenta: #c8246b; --magenta-soft: #fbe3ee;
+    --tile: #3a68c2; --jasmine: #ffcf5c;
+    --serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+    --sans: Manrope, "Segoe UI", system-ui, sans-serif;
+    --mono: "DM Mono", Consolas, "Courier New", monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #141413; --surface: #1f1f1d; --ink: #f4f3ee; --ink-2: #c3c2b7; --ink-3: #8f8d84;
-      --line: #34332f; --tun: #5a9be8; --tun-soft: #1b2a3d; --for: #f07a4a; --for-soft: #3a2219; --disagree: #e0a526;
+      --page: #0b1f3a; --paper: #10284a; --ink: #f7f8f5; --ink-2: #c5d1e3; --ink-3: #8094b3; --line: #22406b;
+      --sky: #17345e; --magenta-soft: #3a1830;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #141413; --surface: #1f1f1d; --ink: #f4f3ee; --ink-2: #c3c2b7; --ink-3: #8f8d84;
-    --line: #34332f; --tun: #5a9be8; --tun-soft: #1b2a3d; --for: #f07a4a; --for-soft: #3a2219; --disagree: #e0a526;
+    --page: #0b1f3a; --paper: #10284a; --ink: #f7f8f5; --ink-2: #c5d1e3; --ink-3: #8094b3; --line: #22406b;
+    --sky: #17345e; --magenta-soft: #3a1830;
   }
+  :root[data-theme="dark"] .tok.TUN { color: #9cbcf0; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink);
-         font: 17px/1.5 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
-  main { max-width: 1100px; margin: 0 auto; padding: 32px 16px 48px; }
-  header h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: -0.01em; }
-  header p { margin: 0; color: var(--ink-2); }
-  .legend { display: flex; gap: 18px; margin-top: 12px; flex-wrap: wrap; font-size: 15px; color: var(--ink-2); }
-  .legend span { display: inline-flex; align-items: center; gap: 6px; }
-  .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 17px/1.5 var(--sans); }
 
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-top: 20px; }
-  form { display: flex; gap: 10px; }
-  input[type=text] { flex: 1; min-width: 0; font: inherit; font-size: 20px; padding: 12px 14px; border-radius: var(--radius);
-         border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
-  input[type=text]:focus { outline: 2px solid var(--tun); outline-offset: 1px; }
-  button.go { font: inherit; font-weight: 600; font-size: 18px; padding: 0 22px; border: 0; border-radius: var(--radius);
-         background: var(--ink); color: var(--bg); cursor: pointer; }
-  button.go:disabled { opacity: .5; cursor: wait; }
+  .band { position: relative; overflow: hidden; background: var(--cobalt); color: #f7f8f5; }
+  .band::after { content: ""; position: absolute; inset: 0 0 0 auto; width: 46%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='104' height='104'%3E%3Cg fill='none' stroke='%233a68c2' stroke-width='2'%3E%3Crect x='24' y='24' width='56' height='56'/%3E%3Crect x='24' y='24' width='56' height='56' transform='rotate(45 52 52)'/%3E%3Ccircle cx='52' cy='52' r='9'/%3E%3C/g%3E%3C/svg%3E");
+    -webkit-mask-image: linear-gradient(to left, #000 40%, transparent); mask-image: linear-gradient(to left, #000 40%, transparent); }
+  .arch { position: absolute; right: 7%; bottom: 0; width: 150px; height: 230px; border-radius: 75px 75px 0 0;
+    background: var(--cobalt-deep); border: 3px solid #5d86d1; border-bottom: 0; z-index: 1; }
+  .band-inner { position: relative; z-index: 2; max-width: 1120px; margin: 0 auto; padding: 44px 16px 40px; }
+  .band h1 { font: 400 64px/1 var(--serif); margin: 0 0 12px; letter-spacing: -0.5px; max-width: 760px; }
+  .band h1 i { color: #ffd6e6; }
+  .band p { margin: 0; max-width: 640px; color: #d6e2f6; font-size: 18px; }
 
-  .examples { margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
-  .examples h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
-  .chip { display: block; width: 100%; text-align: left; font: inherit; font-size: 15px; margin: 0 0 6px; padding: 7px 10px;
-          border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); cursor: pointer; }
-  .chip:hover { border-color: var(--tun); }
+  main { max-width: 1120px; margin: 0 auto; padding: 28px 16px 48px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; color: var(--ink-2); font-size: 15px; margin-bottom: 22px; }
+  .legend .tok { font-size: 15px; padding: 2px 10px; }
 
-  .best-label { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); margin: 0 0 10px; }
-  .sentence { display: flex; flex-wrap: wrap; gap: 8px; font-size: 26px; }
-  .w { padding: 3px 10px 5px; border-radius: 8px; position: relative; }
-  .w.TUN { color: var(--tun); background: var(--tun-soft); }
-  .w.FOR { color: #fff; background: var(--for); font-weight: 600; }
-  .w.skip { color: var(--ink-3); }
-  .stats { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 14px; color: var(--ink-2); font-size: 15px; }
-  .stats b { color: var(--ink); font-size: 18px; }
+  form { display: flex; gap: 12px; }
+  input[type=text] { flex: 1; min-width: 0; font: 22px var(--mono); padding: 14px 16px; border-radius: 12px;
+    border: 2px solid var(--line); background: var(--paper); color: var(--ink); }
+  input[type=text]:focus { outline: none; border-color: var(--cobalt); }
+  button.go { font: 700 18px var(--sans); padding: 0 26px; border: 0; border-radius: 12px; cursor: pointer;
+    background: var(--magenta); color: #fff; }
+  button.go:disabled { opacity: .6; cursor: wait; }
+
+  .examples { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px 28px; margin: 22px 0 8px; }
+  .examples h3 { font: italic 400 24px/1.2 var(--serif); margin: 0 0 8px; color: var(--ink); }
+  .chip { display: block; width: 100%; text-align: left; font: 15px var(--mono); margin: 0 0 6px; padding: 7px 0;
+    border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--ink-2); cursor: pointer; }
+  .chip:hover { color: var(--cobalt); border-bottom-color: var(--cobalt); }
+
+  section.result { margin-top: 30px; padding-top: 24px; border-top: 2px solid var(--ink); }
+  .kicker { font: italic 400 26px var(--serif); margin: 0 0 14px; color: var(--ink-2); }
+  .sentence { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tok { font-family: var(--mono); border-radius: 999px; padding: 4px 14px 6px; position: relative; white-space: nowrap; }
+  .sentence .tok { font-size: 30px; }
+  .tok.TUN { color: var(--cobalt); background: var(--sky); }
+  .tok.FOR { color: #fff; background: var(--magenta); font-weight: 500; }
+  .tok.skip { color: var(--ink-3); padding-left: 4px; padding-right: 4px; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tok.TUN { color: #9cbcf0; } }
+  .stats { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 16px; color: var(--ink-2); font-size: 15px; }
+  .stats b { font: 400 30px/1 var(--serif); color: var(--ink); margin-right: 4px; }
 
   .compare { overflow-x: auto; }
-  table { border-collapse: separate; border-spacing: 4px 6px; font-size: 16px; }
-  th.model { text-align: left; font-weight: 600; white-space: nowrap; padding-right: 10px; color: var(--ink-2); }
-  th.model small { display: block; font-weight: 400; color: var(--ink-3); font-size: 12px; }
+  table { border-collapse: separate; border-spacing: 6px 8px; margin-left: -6px; }
+  th.model { text-align: left; font: 400 24px/1.1 var(--serif); padding-right: 14px; white-space: nowrap; }
+  th.model small { display: block; font: 12px var(--mono); color: var(--ink-3); margin-top: 2px; }
   td { padding: 0; }
-  td .w { display: inline-block; white-space: nowrap; font-size: 16px; padding: 2px 8px 4px; }
-  thead th { font-weight: 400; font-size: 12px; color: var(--ink-3); height: 14px; }
-  .dis { color: var(--disagree); font-size: 15px; }
-  .bar { position: absolute; left: 8px; right: 8px; bottom: 2px; height: 3px; border-radius: 2px; background: rgba(127,127,127,.25); }
+  td .tok { display: inline-block; font-size: 16px; padding: 3px 10px 5px; }
+  thead th { height: 16px; font-weight: 400; }
+  .dis { color: var(--magenta); font-size: 14px; }
+  .bar { position: absolute; left: 10px; right: 10px; bottom: 1px; height: 3px; border-radius: 2px; background: rgba(127,127,127,.25); }
   .bar i { display: block; height: 100%; border-radius: 2px; background: currentColor; }
-  .note { color: var(--ink-3); font-size: 14px; margin-top: 10px; }
-  .error { color: var(--for); }
-  footer { margin-top: 28px; color: var(--ink-3); font-size: 13px; }
-  @media (max-width: 600px) { header h1 { font-size: 24px; } .sentence { font-size: 20px; } form { flex-direction: column; } button.go { padding: 12px; } }
+  .note { color: var(--ink-3); font-size: 14px; margin-top: 8px; }
+  .error { color: var(--magenta); }
+  footer { margin-top: 34px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--ink-3); font: 13px/1.6 var(--mono); }
+  @media (max-width: 640px) { .band h1 { font-size: 44px; } .arch { display: none; } form { flex-direction: column; } button.go { padding: 12px; } .sentence .tok { font-size: 22px; } }
 </style>
 </head>
 <body>
+<header class="band">
+  <div class="arch" aria-hidden="true"></div>
+  <div class="band-inner">
+    <h1>Tunisian–French <i>code-switching</i> detector</h1>
+    <p>Tunisian written in Latin letters (Arabizi). Five models label every word as Tunisian or foreign (French / English).</p>
+  </div>
+</header>
+
 <main>
-  <header>
-    <h1>Tunisian ↔ French code-switching detector</h1>
-    <p>Tunisian written in Latin letters (Arabizi). Every word is labelled <b>Tunisian</b> or <b>Foreign</b> (French / English) by five models trained on the TArC corpus.</p>
-    <div class="legend">
-      <span><i class="swatch" style="background:var(--tun)"></i>Tunisian (TUN)</span>
-      <span><i class="swatch" style="background:var(--for)"></i>Foreign (FOR)</span>
-      <span><span class="dis">◆</span>models disagree on this word</span>
-      <span style="color:var(--ink-3)">grey = punctuation / numbers, not scored</span>
-    </div>
-  </header>
+  <div class="legend">
+    <span><span class="tok TUN">tunisian</span></span>
+    <span><span class="tok FOR">foreign</span></span>
+    <span><span class="dis">◆</span> models disagree</span>
+    <span>grey: punctuation and numbers, not scored</span>
+  </div>
 
-  <section class="card">
-    <form id="f">
-      <input id="t" type="text" autocomplete="off" spellcheck="false" value="3andi rendez-vous m3a el docteur demain"
-             aria-label="Sentence to analyse">
-      <button class="go" id="go" type="submit">Detect</button>
-    </form>
-    <div class="examples" id="ex"></div>
-  </section>
+  <form id="f">
+    <input id="t" type="text" autocomplete="off" spellcheck="false" value="3andi rendez-vous m3a el docteur demain"
+           aria-label="Sentence to analyse">
+    <button class="go" id="go" type="submit">Detect</button>
+  </form>
+  <div class="examples" id="ex"></div>
 
-  <section class="card" id="out" hidden>
-    <p class="best-label" id="bestLabel">Best model</p>
+  <section class="result" id="out" hidden>
+    <p class="kicker" id="bestLabel">Best model</p>
     <div class="sentence" id="best"></div>
     <div class="stats" id="stats"></div>
   </section>
 
-  <section class="card compare" id="cmp" hidden>
-    <p class="best-label">All models, word by word</p>
+  <section class="result compare" id="cmp" hidden>
+    <p class="kicker">All five models, word by word</p>
     <table id="tbl"></table>
-    <p class="note">The thin bar under each XLM-R word shows its confidence. Hover a word to see the probability.</p>
+    <p class="note">The thin bar under each XLM-R word is its confidence; hover a word for the probability.</p>
   </section>
 
   <footer>
-    Data: TArC, the Tunisian Arabish Corpus (Gugliotta &amp; Dinarelli, LREC 2022, CC BY-NC-SA 4.0).
-    Test foreign-word F1: Lexicon 0.83 · Char n-grams 0.95 · CRF 0.96 · BiLSTM-CRF 0.97 · XLM-R 0.98.
-    The example sentences were written for this demo; they are not from the corpus.
+    Data: TArC, Tunisian Arabish Corpus (Gugliotta &amp; Dinarelli, LREC 2022, CC BY-NC-SA 4.0) ·
+    test foreign-word F1: lexicon 0.83 · char n-grams 0.95 · CRF 0.96 · BiLSTM-CRF 0.97 · XLM-R 0.98 ·
+    example sentences written for this demo, not from the corpus
   </footer>
 </main>
 
 <script>
+// ?theme=light or ?theme=dark overrides the OS setting (handy on projectors)
+const theme = new URLSearchParams(location.search).get("theme");
+if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+
 const EXAMPLES = {
   "Words never seen in training": [
     "3andi rendez-vous m3a el docteur demain",
@@ -123,7 +146,7 @@ const EXAMPLES = {
     "ou ba3d chnowa sar ?",
     "la la ma n7ebch nemchi la fac lyoum",
   ],
-  "French + English inside Tunisian": [
+  "French and English inside Tunisian": [
     "nchallah el weekend jey nemchiw lel plage",
     "ena mech mte3 stress ama demain 3andi examen",
     "el prof 9al l'examen sera facile",
@@ -148,7 +171,7 @@ for (const [group, items] of Object.entries(EXAMPLES)) {
 function chip(text, label, p) {
   const title = p == null ? label : `${label} · P(foreign) = ${p.toFixed(2)}`;
   const conf = p == null ? "" : `<span class="bar"><i style="width:${Math.round(100 * Math.max(p, 1 - p))}%"></i></span>`;
-  return `<span class="w ${label}" title="${esc(title)}">${esc(text)}${conf}</span>`;
+  return `<span class="tok ${label}" title="${esc(title)}">${esc(text)}${conf}</span>`;
 }
 
 function render(data) {
@@ -157,15 +180,15 @@ function render(data) {
     $("best").innerHTML = '<span class="note">No words to label.</span>'; $("stats").innerHTML = ""; return; }
   const scoredIdx = words.map((w, i) => (w.scored ? i : -1)).filter((i) => i >= 0);
   const best = models[models.length - 1];  // XLM-R if present (best model), otherwise BiLSTM-CRF
-  $("bestLabel").textContent = `Best model: ${best.short}`;
+  $("bestLabel").textContent = `What ${best.short} says`;
   const lab = (m, i) => m.labels[scoredIdx.indexOf(i)];
   $("best").innerHTML = words.map((w, i) =>
-    w.scored ? chip(w.text, lab(best, i), null) : `<span class="w skip">${esc(w.text)}</span>`).join("");
+    w.scored ? chip(w.text, lab(best, i), null) : `<span class="tok skip">${esc(w.text)}</span>`).join("");
   const nFor = best.labels.filter((l) => l === "FOR").length;
   const sw = best.labels.slice(1).filter((l, i) => l !== best.labels[i]).length;
-  $("stats").innerHTML = `<span><b>${best.labels.length}</b> words</span><span><b>${nFor}</b> foreign</span>` +
-    `<span><b>${sw}</b> language switch${sw === 1 ? "" : "es"}</span>` +
-    `<span>code-switched sentence: <b>${nFor && nFor < best.labels.length ? "yes" : "no"}</b></span>`;
+  $("stats").innerHTML = `<span><b>${best.labels.length}</b>words</span><span><b>${nFor}</b>foreign</span>` +
+    `<span><b>${sw}</b>language switch${sw === 1 ? "" : "es"}</span>` +
+    `<span><b>${nFor && nFor < best.labels.length ? "yes" : "no"}</b>code-switched</span>`;
 
   const disagree = scoredIdx.map((i) => new Set(models.map((m) => lab(m, i))).size > 1);
   let html = "<thead><tr><th></th>" + words.map((w, i) => {
@@ -174,7 +197,7 @@ function render(data) {
   }).join("") + "</tr></thead><tbody>";
   for (const m of models) {
     html += `<tr><th class="model">${esc(m.short)}<small>${m.ms} ms</small></th>` + words.map((w, i) => {
-      if (!w.scored) return `<td><span class="w skip">${esc(w.text)}</span></td>`;
+      if (!w.scored) return `<td><span class="tok skip">${esc(w.text)}</span></td>`;
       const k = scoredIdx.indexOf(i);
       return `<td>${chip(w.text, m.labels[k], m.p_for ? m.p_for[k] : null)}</td>`;
     }).join("") + "</tr>";

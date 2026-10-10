@@ -12,4 +12,3 @@ models/*
 # local run logs and personal notes
 results/train_log.txt
 docs/PRESENTATION_GUIDE.md
-CLAUDE.md

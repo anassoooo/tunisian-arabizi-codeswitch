@@ -10,6 +10,7 @@
 3. Zoom the browser to 125–150 % so the back of the room can read it.
 4. It runs **offline**: no internet is needed. Close other programs that use the GPU.
 5. If port 8000 is busy, add `--port 8080`.
+6. The page follows your system's light/dark setting. To force one, open `http://127.0.0.1:8000/?theme=light` (best on projectors) or `?theme=dark`.
 
 **Backup, if the browser fails:** the command-line demo shows the same output:
 ```bash

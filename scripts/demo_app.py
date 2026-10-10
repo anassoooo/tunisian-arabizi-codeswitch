@@ -58,7 +58,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
-        if self.path in ("/", "/index.html"):
+        if self.path.split("?")[0] in ("/", "/index.html"):
             self._send(200, PAGE, "text/html; charset=utf-8")
         else:
             self._send(404, b"not found", "text/plain")

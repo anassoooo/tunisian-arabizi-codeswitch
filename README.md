@@ -1,5 +1,7 @@
 # Tunisian–French code-switching detection in Arabizi
 
+![Tunisian–French code-switching detection](docs/images/banner.png)
+
 Word-level language identification for **Tunisian Arabic written in Latin letters** (*Arabizi*). Each word is labelled **TUN** (Tunisian) or **FOR** (code-switched French or English).
 
 ```
@@ -8,6 +10,8 @@ TUN  TUN  TUN  TUN     TUN     FOR  FOR  TUN
 ```
 
 Both languages use the same alphabet, so the script gives no clue. A model has to rely on spelling (digits used as letters, like `3` = ع, `7` = ح, `9` = ق; French endings and accents) and on **context**. In the sentence above, the first two `la` mean Tunisian "no" and the third is the French article.
+
+**Demo app** (`python scripts/demo_app.py`): five models label the same sentence side by side, with disagreements marked.
 
 ![Demo app: five models labelling the same sentence](docs/images/demo.png)
 
