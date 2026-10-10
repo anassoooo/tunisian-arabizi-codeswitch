@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arabizi Code-Switch Detector</title>
+<style>
+  :root {
+    --bg: #f7f6f2; --surface: #ffffff; --ink: #1d1d1b; --ink-2: #5c5b55; --ink-3: #8f8d84;
+    --line: #e4e2da; --tun: #2a78d6; --tun-soft: #e3eefb; --for: #eb6834; --for-soft: #fde8de;
+    --disagree: #eda100; --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141413; --surface: #1f1f1d; --ink: #f4f3ee; --ink-2: #c3c2b7; --ink-3: #8f8d84;
+      --line: #34332f; --tun: #5a9be8; --tun-soft: #1b2a3d; --for: #f07a4a; --for-soft: #3a2219; --disagree: #e0a526;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141413; --surface: #1f1f1d; --ink: #f4f3ee; --ink-2: #c3c2b7; --ink-3: #8f8d84;
+    --line: #34332f; --tun: #5a9be8; --tun-soft: #1b2a3d; --for: #f07a4a; --for-soft: #3a2219; --disagree: #e0a526;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 17px/1.5 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 16px 48px; }
+  header h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--ink-2); }
+  .legend { display: flex; gap: 18px; margin-top: 12px; flex-wrap: wrap; font-size: 15px; color: var(--ink-2); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-top: 20px; }
+  form { display: flex; gap: 10px; }
+  input[type=text] { flex: 1; min-width: 0; font: inherit; font-size: 20px; padding: 12px 14px; border-radius: var(--radius);
+         border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+  input[type=text]:focus { outline: 2px solid var(--tun); outline-offset: 1px; }
+  button.go { font: inherit; font-weight: 600; font-size: 18px; padding: 0 22px; border: 0; border-radius: var(--radius);
+         background: var(--ink); color: var(--bg); cursor: pointer; }
+  button.go:disabled { opacity: .5; cursor: wait; }
+
+  .examples { margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .examples h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+  .chip { display: block; width: 100%; text-align: left; font: inherit; font-size: 15px; margin: 0 0 6px; padding: 7px 10px;
+          border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); cursor: pointer; }
+  .chip:hover { border-color: var(--tun); }
+
+  .best-label { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); margin: 0 0 10px; }
+  .sentence { display: flex; flex-wrap: wrap; gap: 8px; font-size: 26px; }
+  .w { padding: 3px 10px 5px; border-radius: 8px; position: relative; }
+  .w.TUN { color: var(--tun); background: var(--tun-soft); }
+  .w.FOR { color: #fff; background: var(--for); font-weight: 600; }
+  .w.skip { color: var(--ink-3); }
+  .stats { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 14px; color: var(--ink-2); font-size: 15px; }
+  .stats b { color: var(--ink); font-size: 18px; }
+
+  .compare { overflow-x: auto; }
+  table { border-collapse: separate; border-spacing: 4px 6px; font-size: 16px; }
+  th.model { text-align: left; font-weight: 600; white-space: nowrap; padding-right: 10px; color: var(--ink-2); }
+  th.model small { display: block; font-weight: 400; color: var(--ink-3); font-size: 12px; }
+  td { padding: 0; }
+  td .w { display: inline-block; white-space: nowrap; font-size: 16px; padding: 2px 8px 4px; }
+  thead th { font-weight: 400; font-size: 12px; color: var(--ink-3); height: 14px; }
+  .dis { color: var(--disagree); font-size: 15px; }
+  .bar { position: absolute; left: 8px; right: 8px; bottom: 2px; height: 3px; border-radius: 2px; background: rgba(127,127,127,.25); }
+  .bar i { display: block; height: 100%; border-radius: 2px; background: currentColor; }
+  .note { color: var(--ink-3); font-size: 14px; margin-top: 10px; }
+  .error { color: var(--for); }
+  footer { margin-top: 28px; color: var(--ink-3); font-size: 13px; }
+  @media (max-width: 600px) { header h1 { font-size: 24px; } .sentence { font-size: 20px; } form { flex-direction: column; } button.go { padding: 12px; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Tunisian ↔ French code-switching detector</h1>
+    <p>Tunisian written in Latin letters (Arabizi). Every word is labelled <b>Tunisian</b> or <b>Foreign</b> (French / English) by five models trained on the TArC corpus.</p>
+    <div class="legend">
+      <span><i class="swatch" style="background:var(--tun)"></i>Tunisian (TUN)</span>
+      <span><i class="swatch" style="background:var(--for)"></i>Foreign (FOR)</span>
+      <span><span class="dis">◆</span>models disagree on this word</span>
+      <span style="color:var(--ink-3)">grey = punctuation / numbers, not scored</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <form id="f">
+      <input id="t" type="text" autocomplete="off" spellcheck="false" value="3andi rendez-vous m3a el docteur demain"
+             aria-label="Sentence to analyse">
+      <button class="go" id="go" type="submit">Detect</button>
+    </form>
+    <div class="examples" id="ex"></div>
+  </section>
+
+  <section class="card" id="out" hidden>
+    <p class="best-label" id="bestLabel">Best model</p>
+    <div class="sentence" id="best"></div>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <section class="card compare" id="cmp" hidden>
+    <p class="best-label">All models, word by word</p>
+    <table id="tbl"></table>
+    <p class="note">The thin bar under each XLM-R word shows its confidence. Hover a word to see the probability.</p>
+  </section>
+
+  <footer>
+    Data: TArC, the Tunisian Arabish Corpus (Gugliotta &amp; Dinarelli, LREC 2022, CC BY-NC-SA 4.0).
+    Test foreign-word F1: Lexicon 0.83 · Char n-grams 0.95 · CRF 0.96 · BiLSTM-CRF 0.97 · XLM-R 0.98.
+    The example sentences were written for this demo; they are not from the corpus.
+  </footer>
+</main>
+
+<script>
+const EXAMPLES = {
+  "Words never seen in training": [
+    "3andi rendez-vous m3a el docteur demain",
+    "ena fi retard 5ater el metro ma jech",
+    "el match ken vraiment top ama el arbitre 5ayeb barcha",
+  ],
+  "Same spelling, two languages": [
+    "c'est la vie ya sa7bi",
+    "ou ba3d chnowa sar ?",
+    "la la ma n7ebch nemchi la fac lyoum",
+  ],
+  "French + English inside Tunisian": [
+    "nchallah el weekend jey nemchiw lel plage",
+    "ena mech mte3 stress ama demain 3andi examen",
+    "el prof 9al l'examen sera facile",
+  ],
+};
+const $ = (id) => document.getElementById(id);
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+const ex = $("ex");
+for (const [group, items] of Object.entries(EXAMPLES)) {
+  const col = document.createElement("div");
+  col.innerHTML = `<h3>${esc(group)}</h3>`;
+  for (const s of items) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.textContent = s;
+    b.onclick = () => { $("t").value = s; run(); };
+    col.appendChild(b);
+  }
+  ex.appendChild(col);
+}
+
+function chip(text, label, p) {
+  const title = p == null ? label : `${label} · P(foreign) = ${p.toFixed(2)}`;
+  const conf = p == null ? "" : `<span class="bar"><i style="width:${Math.round(100 * Math.max(p, 1 - p))}%"></i></span>`;
+  return `<span class="w ${label}" title="${esc(title)}">${esc(text)}${conf}</span>`;
+}
+
+function render(data) {
+  const words = data.words, models = data.models;
+  if (!models.length) { $("out").hidden = false; $("cmp").hidden = true;
+    $("best").innerHTML = '<span class="note">No words to label.</span>'; $("stats").innerHTML = ""; return; }
+  const scoredIdx = words.map((w, i) => (w.scored ? i : -1)).filter((i) => i >= 0);
+  const best = models[models.length - 1];  // XLM-R if present (best model), otherwise BiLSTM-CRF
+  $("bestLabel").textContent = `Best model: ${best.short}`;
+  const lab = (m, i) => m.labels[scoredIdx.indexOf(i)];
+  $("best").innerHTML = words.map((w, i) =>
+    w.scored ? chip(w.text, lab(best, i), null) : `<span class="w skip">${esc(w.text)}</span>`).join("");
+  const nFor = best.labels.filter((l) => l === "FOR").length;
+  const sw = best.labels.slice(1).filter((l, i) => l !== best.labels[i]).length;
+  $("stats").innerHTML = `<span><b>${best.labels.length}</b> words</span><span><b>${nFor}</b> foreign</span>` +
+    `<span><b>${sw}</b> language switch${sw === 1 ? "" : "es"}</span>` +
+    `<span>code-switched sentence: <b>${nFor && nFor < best.labels.length ? "yes" : "no"}</b></span>`;
+
+  const disagree = scoredIdx.map((i) => new Set(models.map((m) => lab(m, i))).size > 1);
+  let html = "<thead><tr><th></th>" + words.map((w, i) => {
+    const k = scoredIdx.indexOf(i);
+    return `<th>${k >= 0 && disagree[k] ? '<span class="dis" title="models disagree">◆</span>' : ""}</th>`;
+  }).join("") + "</tr></thead><tbody>";
+  for (const m of models) {
+    html += `<tr><th class="model">${esc(m.short)}<small>${m.ms} ms</small></th>` + words.map((w, i) => {
+      if (!w.scored) return `<td><span class="w skip">${esc(w.text)}</span></td>`;
+      const k = scoredIdx.indexOf(i);
+      return `<td>${chip(w.text, m.labels[k], m.p_for ? m.p_for[k] : null)}</td>`;
+    }).join("") + "</tr>";
+  }
+  $("tbl").innerHTML = html + "</tbody>";
+  $("out").hidden = false; $("cmp").hidden = false;
+}
+
+async function run() {
+  const text = $("t").value.trim();
+  if (!text) return;
+  $("go").disabled = true; $("go").textContent = "…";
+  try {
+    const r = await fetch("/api/tag", { method: "POST", headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ text }) });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+    render(data);
+  } catch (e) {
+    $("out").hidden = false; $("cmp").hidden = true;
+    $("best").innerHTML = `<span class="error">Error: ${esc(e.message)}. Is demo_app.py still running?</span>`;
+    $("stats").innerHTML = "";
+  } finally {
+    $("go").disabled = false; $("go").textContent = "Detect";
+  }
+}
+$("f").addEventListener("submit", (e) => { e.preventDefault(); run(); });
+run();
+</script>
+</body>
+</html>
